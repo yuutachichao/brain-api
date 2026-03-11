@@ -116,8 +116,21 @@ with conn.cursor() as cur:
 cur.execute(
 """
 insert into articles (id, title, source_url, source_type, author, language, raw_content, clean_content, summary, key_points, tags, assistant_notes, status)
-values (%s, %s, %s, %s, %s, %s, %s,
-hunk_id": chunk_id,
+values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s::jsonb, %s::jsonb, %s, 'processed')
+""",
+(
+article_id, req.title, req.source_url, req.source_type, req.author, req.language,
+req.raw_content, clean, req.summary, json_dump(req.key_points), json_dump(req.tags), req.assistant_notes
+),
+)
+
+for idx, chunk in enumerate(chunks):
+vec = first_vec if idx == 0 else embed(chunk)
+chunk_id = str(uuid.uuid4())
+point_id = str(uuid.uuid4())
+payload = {
+"article_id": article_id,
+"chunk_id": chunk_id,
 "chunk_index": idx,
 "title": req.title,
 "source_url": req.source_url,
@@ -240,6 +253,4 @@ return max(1, math.ceil(len(text) / 4))
 
 def json_dump(items: List[str]) -> str:
 import json
-return json.dumps(items, en
-sure_ascii=False)
-
+return json.dumps(items, ensure_ascii=False)
