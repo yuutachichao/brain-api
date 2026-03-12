@@ -144,9 +144,18 @@ def ingest_article(req: IngestRequest, authorization: Optional[str] = Header(def
                     "embedding_version": EMBEDDING_VERSION,
                 }
                 qres = requests.put(
-                    f"{QDRANT_URL}/collections/{QDRANT_COLLECTION}/points",
-                    json={"points": [{"id": point_id, "vector": vec, "payload": payload}]},
-                    timeout=60,
+                f"{QDRANT_URL}/collections/{QDRANT_COLLECTION}/points",
+                json={
+                "points": [
+                {
+                "id": point_id,
+                "vector": vec,
+                "payload": payload,
+                }
+                ]
+                },
+                headers=QDRANT_HEADERS,
+                timeout=60,
                 )
                 qres.raise_for_status()
                 cur.execute(
@@ -174,9 +183,10 @@ def search(req: SearchRequest, authorization: Optional[str] = Header(default=Non
     check_auth(authorization)
     vec = embed(req.query)
     sres = requests.post(
-        f"{QDRANT_URL}/collections/{QDRANT_COLLECTION}/points/search",
-        json={"vector": vec, "limit": req.top_k, "with_payload": True},
-        timeout=60,
+    f"{QDRANT_URL}/collections/{QDRANT_COLLECTION}/points/search",
+    json={"vector": vec, "limit": req.top_k, "with_payload": True},
+    headers=QDRANT_HEADERS,
+    timeout=60,
     )
     sres.raise_for_status()
     hits = sres.json().get("result", [])
