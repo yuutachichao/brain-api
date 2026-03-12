@@ -12,6 +12,7 @@ app = FastAPI(title="brain-api", version="0.1.0")
 
 POSTGRES_URL = os.environ.get("POSTGRES_URL", "")
 QDRANT_URL = os.environ.get("QDRANT_URL", "")
+QDRANT_API_KEY = os.environ.get("QDRANT_API_KEY", "")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "")
 API_KEY = os.environ.get("API_KEY", "")
 EMBEDDING_MODEL = os.environ.get("EMBEDDING_MODEL", "bge-m3")
@@ -21,6 +22,7 @@ QDRANT_COLLECTION = os.environ.get("QDRANT_COLLECTION", "knowledge_bge_m3_v1")
 TOP_K_DEFAULT = int(os.environ.get("TOP_K_DEFAULT", "8"))
 CHUNK_SIZE = int(os.environ.get("CHUNK_SIZE", "1200"))
 CHUNK_OVERLAP = int(os.environ.get("CHUNK_OVERLAP", "150"))
+QDRANT_HEADERS = {"api-key": QDRANT_API_KEY} if QDRANT_API_KEY else {}
 
 
 def check_auth(auth_header: Optional[str]):
@@ -55,11 +57,11 @@ def get_conn():
 
 def ensure_qdrant_collection(dim: int):
     url = f"{QDRANT_URL}/collections/{QDRANT_COLLECTION}"
-    res = requests.get(url, timeout=20)
+    res = requests.get(url, headers=QDRANT_HEADERS, timeout=20)
     if res.status_code == 200:
         return
     payload = {"vectors": {"size": dim, "distance": "Cosine"}}
-    res = requests.put(url, json=payload, timeout=20)
+    res = requests.put(url, json=payload, headers=QDRANT_HEADERS, timeout=20)
     res.raise_for_status()
 
 
